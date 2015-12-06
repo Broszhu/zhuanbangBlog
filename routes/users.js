@@ -32,6 +32,7 @@ router.post('/login', function (req, res) {
 });
 
 router.get('/logout', function (req, res) {
+    res.render('users/logout', {title: '退出朱安邦博客'});
 });
 
 module.exports = router;

@@ -72,4 +72,57 @@ http://localhost:3000/articles/add
 
 ![](http://i.imgur.com/LGEzIus.png)
 
+# 5、开发准备工作 
+MD5加密算法
 
+- var crypto = require('crypto');
+- var content = 'password'
+- var md5 = crypto.createHash('md5');
+- md5.update(content);
+- var d = md5.digest('hex'); 
+
+SHA1加密例程
+
+- var crypto = require('crypto');
+- var content = 'password'
+- var shasum = crypto.createHash('sha1');
+- shasum.update(content);
+- var d = shasum.digest('hex');
+
+
+### 配置bower
+ 执行bower init
+
+一路回车就可以生产一个bower.json 文件；然后再通过 
+
+ - touch  .bowerrc
+
+创建一个.bowerrc文件；里面的内容输入
+
+- {"directory":"./public/lib"}
+
+这表示以后bower安装的模块都安装在./public/lib下面。
+
+然后通过 bower install bootstrap --save  安装bootstrap文件；因为家了--save。不但会安装bootstrap,还会安装依赖的jquery；
+
+然后通过拼接文档的方式来拼index.ejs；内容如下
+
+- <% include include/header.ejs%>
+- < div class="container">
+-   这是主页的内容哦！
+- < /div>
+- <% include include/footer.ejs%>
+
+下面是这里的样子；
+
+![](http://i.imgur.com/ltL6U3w.png)
+
+注册页面如下
+
+![](http://i.imgur.com/RxRrA5Z.png)
+
+登录页面如下
+![](http://i.imgur.com/pHfkHm1.png)
+
+发表文章页面如下
+![](http://i.imgur.com/LmpeCKk.png)
