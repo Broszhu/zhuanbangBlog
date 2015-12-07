@@ -1,8 +1,9 @@
-#this is my blog  by node 【node博客项目】
+#this is my blog  by node 【我的 node博客项目】
 
 ## express 用的是老版本的；
   - 开始是用 npm install -g express-generator来安装用的；但是每次用的时候，出现不是可用的命令行；折腾半天没有解决；我就用老版本了
   - 我用了；npm install -g express@3.5.0  这个版本来操作的；
+  - 后来解决好了，可以用npm install -g express-generator了
 
 # 1、初始化一个仓库
 
@@ -14,6 +15,7 @@
  - 在浏览器里访问 http://localhost:3000 就可以显示欢迎页面
     - Express
     - Welcome to Express
+ - 再命令行输入 SET PORT=5000 可以把默认的3000端口改为5000
  - 通过命令行简历一个忽略文件。touch .gitignore 忽略
     - node_modules
     - .idea
@@ -72,7 +74,7 @@ http://localhost:3000/articles/add
 
 ![](http://i.imgur.com/LGEzIus.png)
 
-# 5、开发准备工作 
+# 5、开发准备工作 ,把首页，登录页，注册页，发表文章页面做好 [git版本存档](https://github.com/Broszhu/zhuanbangBlog/commit/3338397799c6452535c26c49101fb667d996aaaf)
 MD5加密算法
 
 - var crypto = require('crypto');
@@ -126,3 +128,59 @@ SHA1加密例程
 
 发表文章页面如下
 ![](http://i.imgur.com/LmpeCKk.png)
+
+# 6，博客注册功能完善，链接mongodb数据库
+
+### 链接数据库
+
+安装mongodb模块到node_modules下面并把此配置添加到package.json文件中
+
+- npm install mongoose --save
+
+mogodb的安装启用；在D:\mongodb\data文件夹下
+
+- 命令窗体中输入 mongod --dbpath=D:\Mongodb\data 按回车键
+注： --dbpath后的值表示数据库文件的存储路径 而且后面的路径必须存在否则服务开启失败 
+借助mongoose工具mongoVUE来管理；
+
+- 在根目录下新建一个db文件夹，并且新建一个index.js文件；
+ 
+
+    	var mongoose=require('mongoose');
+    	mongoose.connect('mongodb://127.0.0.1:27017/zhuanbangblog');
+    	mongoose.model('User',new mongoose.Schema({
+	    	username:String,
+	    	password:String,
+	    	email:String
+    	}));
+		global.Model=function(modName){
+		    return mongoose.model(modName);//一个参数是获取model值；并且放在global用；可以直接在users.js里用
+		}
+
+//model2个是定义，一个是取值；
+
+global.Model=function(modName){
+    return mongoose.model(modName);//一个参数是获取model值；并且放在global用；可以直接在users.js里用
+}
+ 
+
+ 一个参数是获取model值；并且放在global用；可以直接在users.js里用；model2个值是定义，一个是取值；
+
+在app.js里require('./db'); 引入一下db里面的index.js;./db和./db/index.db是一样的效果的；
+
+###user.js里的登录如下；
+    router.post('/reg', function (req, res) {
+    var user=req.body;//获取用户提交过来的注册表单
+    new Model('User')(user).save(function(err,user){
+    if(err){
+    res.redirect('/users/reg')
+    }else{
+    res.redirect('/users/login')
+    }
+    })
+    });
+
+
+###mongoVUE中的数据如图
+
+![](http://i.imgur.com/f9LFaeF.png)

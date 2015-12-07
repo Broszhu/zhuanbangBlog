@@ -16,6 +16,14 @@ router.get('/reg', function (req, res) {
  * 当填写用户注册信息提交时的处理
  */
 router.post('/reg', function (req, res) {
+    var user=req.body;//获取用户提交过来的注册表单
+    new Model('User')(user).save(function(err,user){
+        if(err){
+            res.redirect('/users/reg')
+        }else{
+            res.redirect('/users/login')
+        }
+    })
 });
 
 /**

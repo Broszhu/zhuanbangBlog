@@ -23,6 +23,7 @@ app.use(bodyParser.urlencoded({ extended: false }));//加载解析urlencoded请�
 app.use(cookieParser());//加载解析cookie的中间件。
 app.use(express.static(path.join(__dirname, 'public')));//设置public文件夹为存放静态文件的目录。所以index.ejs代码中的 href='/stylesheets/style.css' 就相当于 href='public/stylesheets/style.css' 。
 
+require('./db');
 app.use('/', routes);//根目录的路由
 app.use('/users', users);//用户的路由的目录文件用user.js来控制
 app.use('/articles', articles);//视图中的articles文件夹用articles来控制；
