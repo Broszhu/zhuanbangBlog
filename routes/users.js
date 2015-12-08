@@ -2,14 +2,14 @@ var express = require('express');
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
+/*router.get('/', function(req, res, next) {
   res.send('respond with a resource || 404,请求资源不存在！');
-});
+});*/
 /**
  * 用户注册
  */
-router.get('/reg', function (req, res) {
-  res.render('users/reg', {title: '注册朱安邦博客'});
+router.get('/reg', function (req, res,next) {
+  res.render('users/reg',{});
 });
 
 /**
@@ -29,14 +29,25 @@ router.post('/reg', function (req, res) {
 /**
  * 显示用户登录表单
  */
-router.get('/login', function (req, res) {
-  res.render('users/login', {title: '登录朱安邦博客'});
+router.get('/login', function (req, res, next) {
+  res.render('users/login',{});
 });
 
  /**
  * 当填写用户登录信息提交时的处理
  */
-router.post('/login', function (req, res) {
+router.post('/login', function (req, res, next) {
+    var user=req.body;//获得请求过来的数据；
+    //在数据库里，查询客户输入的信息；找到一个就可以返回了；
+    Model('User').findOne(user,function(err,user){
+        if(user){
+            //req.session={};
+            req.session.user = user;
+            res.redirect('/')
+        }else{
+            res.redirect('/users/login');
+        }
+    })
 });
 
 router.get('/logout', function (req, res) {

@@ -129,7 +129,7 @@ SHA1加密例程
 发表文章页面如下
 ![](http://i.imgur.com/LmpeCKk.png)
 
-# 6，博客注册功能完善，链接mongodb数据库
+# 6，博客【注册】&&【登录】功能完善，链接mongodb数据库
 
 ### 链接数据库
 
@@ -168,6 +168,8 @@ global.Model=function(modName){
 
 在app.js里require('./db'); 引入一下db里面的index.js;./db和./db/index.db是一样的效果的；
 
+检查require是否正确，可以按住ctrl点击文件，如果可以访问，说明是正确的，如果访问不了，说明不成功的;
+
 ###user.js里的登录如下；
     router.post('/reg', function (req, res) {
     var user=req.body;//获取用户提交过来的注册表单
@@ -184,3 +186,97 @@ global.Model=function(modName){
 ###mongoVUE中的数据如图
 
 ![](http://i.imgur.com/f9LFaeF.png)
+
+###登录的和注册套路一样；
+
+    router.post('/login', function (req, res) {
+    var user=req.body;//获得请求过来的数据；
+    //在数据库里，查询客户输入的信息；找到一个就可以返回了；
+    Model('User').findOne(user,function(err,user){
+        console.log('err');
+        if(user){
+            res.redirect('/')
+        }else{
+            res.redirect('/users/login')
+        }
+    })
+	});
+如果登录成功就返回到首页，如果登录失败就留在登录页；
+
+# 会话支持模块
+
+导航条内做判断
+            <ul class="nav navbar-nav">
+            <%
+            if(user){
+                %>
+                    <li><a href="/articles/add">发表文章</a></li>
+                    <li><a href="/users/logout">登出</a></li>
+                <%
+            }else{
+                %>
+                    <li class="active"><a href="/users/reg">注册</a></li>
+                    <li><a href="/users/login">登录</a></li>
+                <%
+            }
+             %>
+        </ul>
+
+app.js里装会话中间件
+
+	var session=require('express-session');//安装后导入会话中间节；
+
+	app.use(session({
+      secret: 'anbangblog',
+      resave: true,
+      saveUninitialized: true,
+        cookie:{
+        maxAge:60*1000*30
+      }
+    })
+	);
+
+	app.use(function(req,res,next){//把请求的user放到res.locals.user上，这样访问的页面就都能用了
+	  res.locals.user=req.session.user;
+	  next();
+	});
+
+因为可以用app里面的res内容；所以下面users.js里的代码需要改变了；
+
+	router.get('/reg', function (req, res,next) {//登录
+	  res.render('users/reg',{});
+	});
+
+	router.get('/login', function (req, res, next) {//注册
+	  res.render('users/login',{});
+	});
+
+这个时候，么有登录时候显示登录和注册；如图
+![](http://i.imgur.com/VDQYs0V.png)
+
+登录后显示发表文章和退出；
+![](http://i.imgur.com/u7LRqwA.png)
+
+但是上面的有一个问题，即时cookie设置是半小时过期；，就是重新启动服务器后，又需要登录了；相当于在一个店铺办卡，然后店铺倒闭，别人再这了重新开一个店铺，以前的卡在新开店里就不认识了；
+这里需要用到一个包；connect-mongo；可以把session保存到数据库了；
+
+安装后，然后app.js引入；
+
+	var MongoStore = require('connect-mongo')(session);//保持session在数据库里的中间件,重启服务器后session也不会丢失；
+
+在app.js下面加入需要引入的数据库；
+
+	app.use(session({
+	      secret: 'anbangblog',
+	      resave: true,
+	      saveUninitialized: true,
+	        store: new MongoStore({//保存session的数据库保存地址；
+	            url: 'mongodb://127.0.0.1:27017/zhuanbangblog'
+	        }),
+	        cookie:{
+	        maxAge:60*1000*30
+	      }
+	    })
+	);
+
+这样无论服务器重启如否都不需要再次登录了；
