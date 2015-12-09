@@ -38,3 +38,15 @@
         </ul>
     </div>
 </nav>
+<!--下面是flash的代码；代表登录成功和失败，success和error要喝user中设置的一样-->
+<%
+ if(success){
+    %>
+    <div class="alert alert-success" role="alert"><%=success %></div>
+    <%
+     }else if(error){
+    %>
+    <div class="alert alert-danger" role="alert"><%=error %></div>
+    <%
+ }
+%>

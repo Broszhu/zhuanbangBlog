@@ -41,17 +41,20 @@ router.post('/login', function (req, res, next) {
     //在数据库里，查询客户输入的信息；找到一个就可以返回了；
     Model('User').findOne(user,function(err,user){
         if(user){
-            //req.session={};
             req.session.user = user;
+            req.flash('success',"恭喜您，登录成功");//类似于req.session.success="登录成功"
             res.redirect('/')
         }else{
+            req.flash('error',"滚粗，登录失败，回家种田去吧！");
             res.redirect('/users/login');
         }
     })
 });
 
 router.get('/logout', function (req, res) {
-    res.render('users/logout', {title: '退出朱安邦博客'});
+    req.session.user = null;
+    req.flash('success',"退出成功，下次进来需要登录哦");
+    res.redirect('/users/login');
 });
 
 module.exports = router;

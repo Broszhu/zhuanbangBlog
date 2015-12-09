@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session=require('express-session');//安装后导入会话中间节；
 var MongoStore = require('connect-mongo')(session);//保持session在数据库里的中间件,重启服务器后session也不会丢失；
+var flash=require('connect-flash');//提示消息用的，注册信息错了，会提示哪里出错了；否则表单多，提示错误，又不说哪里错了，很崩溃！
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -40,8 +41,11 @@ app.use(session({
       }
     })
 );
+app.use(flash());//引入后可以在req后面加一个flash的方法；通过req.flash来使用；
 app.use(function(req,res,next){
   res.locals.user=req.session.user;
+    res.locals.success=req.flash("success").toString();//req.flash("success")取出来的是数组，需要toString一下；
+    res.locals.error=req.flash("error").toString();
   next();
 });
 

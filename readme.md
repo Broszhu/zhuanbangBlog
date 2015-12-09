@@ -280,3 +280,53 @@ app.js里装会话中间件
 	);
 
 这样无论服务器重启如否都不需要再次登录了；
+
+### 提示消息通知
+
+很多时候注册表单错了，如果只提示错误，并不告诉错误原因，用户会很崩溃；通过connrct-flash可以来实现
+
+	npm install connect-flash --save
+先安装flash包；
+然后通过下面的代码引入到app.js里；
+
+	var flash = require('connect-flash');
+	app.use(flash());
+
+user.js里添加
+
+    req.flash('success',"恭喜您，登录成功");//类似于req.session.success="登录成功"
+如果失败了，用
+
+    req.flash('error',"滚粗，登录失败，回家种田去吧！");
+
+在前台里面需要用<%=success%>和<%=error%>来供替换；
+
+因为是消息提示的，所以需要用到ifelse来判断；
+
+	<%
+ 	if(success){
+    %>
+    <div class="alert alert-success" role="alert"><%=success %></div>
+    <%
+     }else if(error){
+    %>
+    <div class="alert alert-danger" role="alert"><%=error %></div>
+    <%
+ 	}
+	%>
+
+然后再app,js里添加东西；
+
+原本是
+
+	app.use(function(req,res,next){
+  	res.locals.user=req.session.user;
+  	next();
+	});
+
+添加后是
+
+    res.locals.success=req.flash("success").toString();//req.flash("success")取出来的是数组，需要toString一下；
+	res.locals.error=req.flash("error").toString();
+
+因为req.flash("success")可以多次提示的，也属于一个数据，需要toString一下，才能让上面的判断生效；
