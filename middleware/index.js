@@ -1,0 +1,19 @@
+//登录才能继续访问的
+exports.checkLogin=function(req,res,next){
+    if(req.session.user){//您已经登录过了
+        next();//继续执行
+    }else{
+        req.flash('error','您还没有登录，需要重新登录');
+        res.redirect('back')
+    }
+};
+
+//未登录才能继续访问的
+exports.checkNotLogin=function(req,res,next){
+    if(req.session.user){//您已经登录过了
+        req.flash('error','您已经登陆过了，不需要重复登录');
+        res.redirect('back')
+    }else{
+        next();//继续执行
+    }
+};

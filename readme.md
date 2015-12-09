@@ -330,3 +330,149 @@ user.js里添加
 	res.locals.error=req.flash("error").toString();
 
 因为req.flash("success")可以多次提示的，也属于一个数据，需要toString一下，才能让上面的判断生效；
+
+#用户访问的权限控制
+登录后的用户，不能访问注册和登录页面；
+没有登录的时候不能访问退出页面；
+
+需要新建一个中间件，在根目录下新建一个middleware文档。在里面新建一个index.js的中间件代码如下
+
+	//登录才能继续访问的
+	exports.checkLogin=function(req,res,next){
+    if(req.session.user){//您已经登录过了
+        next();//继续执行
+    }else{
+        req.flash('error','您还没有登录，需要重新登录');
+        res.redirect('back')
+    }
+	};
+
+	//未登录才能继续访问的
+	exports.checkNotLogin=function(req,res,next){
+    if(req.session.user){//您已经登录过了
+        req.flash('error','您已经登陆过了，不需要重复登录');
+        res.redirect('back')
+    }else{
+        next();//继续执行
+    }
+	};
+
+然后再user中，在参数里假如，会先执行的里面的；添加的注册页面如下
+
+	router.get('/reg', middleware.checkNotLogin, function (req, res,next) {
+    res.render('users/reg',{});
+	});
+
+	
+退出界面如下
+
+	router.get('/logout', middleware.checkLogin, function (req, res) {
+	    req.session.user = null;
+	    req.flash('success',"退出成功，下次进来需要登录哦");
+	    res.redirect('/users/login');
+	});
+
+图像如下；
+
+![](http://i.imgur.com/m9bZCNP.png)
+
+![](http://i.imgur.com/si5Zwl3.png)
+
+这样就做好了用户权限的控制；
+
+#发表文章页面的制作；
+
+在routes/articles里修改；套路和注册一样的；
+
+	router.post('/add', function (req, res, next) {
+    var article=req.body;
+    new  Model('Article')(article).save(function(err,article){
+        if(err){
+            res.redirect('back')
+        }else{
+            res.redirect('/')
+        }
+    })
+	});
+
+这个时候需要mongodb里改下model；因为现在的model没有Article，只有User的；在db下面的index.js里添加；
+
+	mongoose.model('Article',new mongoose.Schema({
+    	title:String,
+    	content:String
+	}));
+
+这个时候就做好了发表文档的页面；发表后可以在mongoVUE里查看到zhuanbangblog的数据库下面的Collections下面多了一个articles的数据表
+
+#首页显示文章的列表
+
+首先在route/index.js中添加文件，把文章给读取出来
+
+	router.get('/', function(req, res) {//当用户访问根目录；也就是 / 的时候执行此回调
+		  var article = req.body;
+		  //下面的populate('user')是mongo提供的方法；会找到user，然后循环name，id等；把用户的ID转成对象；这个用法非常好用，一定要记得用；
+		  Model('Article').find({}).populate('user').exec(function(err,articles){
+		    res.render('index', { articles: articles});
+		  });
+	});
+
+然后需要修改db文件下面的index.js
+
+	mongoose.model('Article',new mongoose.Schema({
+	    title:String,
+	    content:String,
+	    user:{type:ObjectId,ref:'User'}//对象ID类型引用User；加的是这一条；ref引用的是上面定好的User
+	}));
+
+其中的ObjectId需要重新的指定；在开始的部分需要下一段下面代码
+	
+	var ObjectId=mongoose.Schema.Types.ObjectId;//Types相当于枚举
+
+然后就是需要重头戏了，需要改routes/srticle.js文件
+
+	router.post('/add', function (req, res, next) {
+    var article=req.body;
+    article.user = req.session.user._id;//给article赋值用户的ID；
+    new  Model('Article')(article).save(function(err,article){
+        if(err){
+            res.redirect('back')
+        }else{
+            res.redirect('/')
+        }
+    })
+	});
+
+然后就是渲染模板了；在views/index.ejs改的代码如下
+
+	<%
+  	for(var i=0;i<articles.length;i++){
+    var article=articles[i];
+  	%>
+    <div class="media">
+      <div class="media-left">
+        <a href="#">
+          < img src="http://gravatar.duoshuo.com/avatar/e069fb6ca153e3c272bc85beb6f85b49?s=50
+          " alt=""/>
+          <%=article.user.username%>
+        </a>
+      </div>
+      <div class="media-body">
+        <h4 class="media-heading"><%=article.title%></h4>
+        <p><%=article.content %></p>
+      </div>
+    </div>
+	  <%
+	  }
+	  %>
+
+
+最后的状态如下
+
+没有登录看到的是
+![](http://i.imgur.com/E8dIx0P.png)
+
+登录后看到的是
+
+![](http://i.imgur.com/lnTailQ.png)
+
+

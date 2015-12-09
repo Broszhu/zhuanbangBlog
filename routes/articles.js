@@ -12,6 +12,18 @@ router.get('/add', function (req, res) {
     res.render('articles/add', {title: '朱安邦博客添加文件'});
 });
 
+router.post('/add', function (req, res, next) {
+    var article=req.body;
+    article.user = req.session.user._id;//给article赋值用户的ID；
+    new  Model('Article')(article).save(function(err,article){
+        if(err){
+            res.redirect('back')
+        }else{
+            res.redirect('/')
+        }
+    })
+});
+
 
 
 module.exports = router;

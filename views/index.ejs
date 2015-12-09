@@ -1,5 +1,27 @@
 <% include include/header.ejs%>
 <div class="container">
-  这是主页的内容哦！
+  <%
+  for(var i=0;i<articles.length;i++){
+    var article=articles[i];
+  %>
+    <div class="media">
+      <div class="media-left">
+        <a href="#">
+          <img src="http://gravatar.duoshuo.com/avatar/e069fb6ca153e3c272bc85beb6f85b49?s=50
+          " alt=""/>
+          <%=article.user.username%>
+        </a>
+      </div>
+      <div class="media-body">
+        <h4 class="media-heading"><%=article.title%></h4>
+        <p><%=article.content %></p>
+      </div>
+    </div>
+  <%
+  }
+  %>
+
+
+
 </div>
 <% include include/footer.ejs%>
