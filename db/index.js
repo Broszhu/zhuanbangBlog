@@ -10,6 +10,7 @@ mongoose.model('User',new mongoose.Schema({
 mongoose.model('Article',new mongoose.Schema({
     title:String,
     content:String,
+    poster:String,
     user:{type:ObjectId,ref:'User'}//对象ID类型引用User；
 }));
 

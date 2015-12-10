@@ -11,6 +11,7 @@ var flash=require('connect-flash');//提示消息用的，注册信息错了，�
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var articles = require('./routes/articles');
+var multer=require('multer');
 
 var app = express();//生成一个express的实例app；
 

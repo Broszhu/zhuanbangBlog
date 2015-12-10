@@ -203,7 +203,7 @@ global.Model=function(modName){
 	});
 如果登录成功就返回到首页，如果登录失败就留在登录页；
 
-# 会话支持模块
+# 7 会话支持模块
 
 导航条内做判断
             <ul class="nav navbar-nav">
@@ -331,7 +331,7 @@ user.js里添加
 
 因为req.flash("success")可以多次提示的，也属于一个数据，需要toString一下，才能让上面的判断生效；
 
-#用户访问的权限控制
+#8 用户访问的权限控制
 登录后的用户，不能访问注册和登录页面；
 没有登录的时候不能访问退出页面；
 
@@ -380,7 +380,7 @@ user.js里添加
 
 这样就做好了用户权限的控制；
 
-#发表文章页面的制作；
+#9、发表文章页面的制作；
 
 在routes/articles里修改；套路和注册一样的；
 
@@ -474,5 +474,161 @@ user.js里添加
 登录后看到的是
 
 ![](http://i.imgur.com/lnTailQ.png)
+
+
+# 10、文章里可以插入图片，并且首页显示
+
+首先是在add文章添加页面把原型弄好；在一个file文件
+
+    <div class="form-group">
+	    <label for="content" class="col-sm-2 control-label" > 图片</label>
+	    <input type="file" name="poster"/>
+	</div>
+这时候需要注意：form里面需要指定：enctype="multipart/form-data"意思的不对字符编码。在使用包含文件上传控件的表单时，必须使用该值。form开始的代码如下
+
+    <form action="/articles/add" method="post" class="form-horizontal" enctype="multipart/form-data">
+
+接收用户上传的中间件用的是multer;在app.js里引入
+
+	var multer=require('multer');
+
+安装的时候记得保存；用的代码是
+
+	npm install multer --save
+
+中间件的变化一般都是非常大的，用的时候直接看中间件的reademe里面的用法就可以了；
+
+在articles.js里添加如下文件
+
+	var path=require('path');
+	var multer=require('multer');
+	var storage = multer.diskStorage({
+    	destination: function (req, file, cb) {
+	        cb(null, '../public/upload')
+	    },
+	    filename: function (req, file, cb) {
+	        cb(null, Date.now()+'.'+path.extname(file.originalname));
+	    }
+	})
+
+备注：上面代码是../public/upload是文件存储的位置，这样储存不用在键路由了；文件名用的是当前时间戳Date.now()加上原名字的后缀；用的path.extname来取文件的后缀；中间用点来链接；（后来亲测不用.来链接可以的；中间点那个字符串可以去掉）
+
+在下面的router.post('/add', function (req, res, next) {改成
+
+	router.post('/add', upload.single('poster') , function (req, res, next) {
+
+里面添加poster的位置
+
+    article.poster=path.join('/upload',req.file.filename);
+
+在views/index.ejs里修改首页显示的视图
+
+        <%
+         if(article.poster){
+            %>
+            <p><img src="<%=article.poster%>"  style="width: 200px;height: 200px" alt=""/></p>
+            <%
+         }
+          %>
+
+db下面的index里面需要修改一下Acticle的属性加一个
+
+    poster:String,
+
+![](http://i.imgur.com/IWtOgLt.png)
+
+#11、添加详情页
+
+首页的views/index.ejs里文件标题修改
+
+	<a href="/articles/detail/<%=article._id %>"><%=article.title%></a>
+
+
+然后再routes/articles.js下面加一个路由
+
+	router.get('/detail/:id',function(req,res){
+    var id = req.params.id;
+    Model('Article').findById(id,function(err,article){
+        res.render('articles/detail',{article:article});
+    })
+	});
+
+
+最终的详情页效果图如下
+
+![](http://i.imgur.com/FfJoOBy.png)
+
+### 增加详情页的【编辑】【功能】；
+
+在detail下面加一个删除的代码
+
+    <div class="footer">
+        <a href="/articles/edit/<%=article._id %>" class="btn btn-warning">编辑</a>
+        <a href="/articles/delete/<%=article._id %>" class="btn btn-danger">删除</a>
+    </div>
+
+然后删除的是在routes/articles下面加一个删除的路由
+
+	router.get('/delete/:id',function(req,res){
+	    var id = req.params.id;
+	    Model('Article').remove({_id:id},function(err){
+	        res.redirect('/');
+	    })
+	});
+
+需要注意的是里面的{_id:id}这里要这么写，不能直接写成id，否则就把整个数据库里的文章给删除了；
+
+这样删除就做好了,删除回到首页的；
+
+![](http://i.imgur.com/7gnMQMr.png)
+
+然后是删除；顺手用middleware.checkLogin做了权限判断；
+
+###编辑功能；
+编辑主要是改
+
+	router.post('/add' , upload.single('poster') ,middleware.checkLogin,  function (req, res, next) {
+
+改后的代码如下
+
+	router.post('/add' , upload.single('poster') ,middleware.checkLogin,  function (req, res, next) {
+    var article=req.body;
+    var id=article.id;
+    if(id){
+        var updateObj = {
+            title:article.title,
+            content:article.content,
+        }
+        if(req.file){
+            var poster = path.join('/upload',req.file.filename);
+            updateObj.poster = poster;
+        }
+
+        new Model('Article').update({_id:id},{$set:updateObj},function(err){
+            if(err){
+                res.redirect('back');
+            }else{
+                res.redirect('/articles/detail/'+id);
+            }
+
+        });
+    }else{
+        article.user = req.session.user._id;//给article赋值用户的ID；
+        if(req.file){
+            article.poster=path.join('/upload',req.file.filename);
+        }
+        new  Model('Article')(article).save(function(err,article){
+            if(err){
+                res.redirect('back')
+            }else{
+                res.redirect('/')
+            }
+        })
+    }
+	});
+
+现在就做好了编辑文件；如果有图片，就用新图片，如果没有图片，就用原来的图片；如果发表的时候有图片，就用图片，如果没有，就直接标题和文字；
+
+
 
 
