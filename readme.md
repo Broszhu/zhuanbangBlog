@@ -630,5 +630,99 @@ db下面的index里面需要修改一下Acticle的属性加一个
 现在就做好了编辑文件；如果有图片，就用新图片，如果没有图片，就用原来的图片；如果发表的时候有图片，就用图片，如果没有，就直接标题和文字；
 
 
+#12 搜索和分页
 
+首先修改views下面的head.js
 
+        <!--下面是搜索信息-->
+    <form class="navbar-form navbar-left" role="search" method="get" action="/articles/list/1/2">
+        <div class="form-group">
+            <input type="text" name="keyword" value="<%=keyword%>" class="form-control" placeholder="搜索关键字">
+        </div>
+        <button type="submit" class="btn btn-default">搜索</button>
+    </form>
+
+route下面的articles加一个路由
+
+	router.get('/list/:pageNum/:pageSize', function(req, res) {
+    var pageNum =  parseInt(req.params.pageNum);
+    pageNum = pageNum<=0?1:pageNum;
+    var pageSize = parseInt(req.params.pageSize);
+    var keyword = req.query.keyword;
+    var query = new RegExp(keyword,"i");
+    Model('Article').count({$or:[{title:query},{content:query}]},function(err,count){
+        var totalPage = Math.ceil(count/pageSize);
+        pageNum = pageNum>=totalPage?totalPage:pageNum;
+        Model('Article').find({$or:[{title:query},{content:query}]})
+            .skip((pageNum-1)*pageSize).limit(pageSize).exec(function(err,articles){
+                res.render('index',{
+                    title:'主页',
+                    pageNum:pageNum,
+                    pageSize:pageSize,
+                    keyword: keyword,
+                    totalPage:totalPage,
+                    articles:articles
+                });
+            });
+    });
+
+	});
+
+app.js里面加文件
+
+	app.use(function(req,res,next){
+    	res.locals.keyword="";
+
+这个是解决刚开始访问没有keyword时候的；
+
+routes/index.js下面修改文件
+
+	  res.redirect('/articles/list/1/2');
+
+默认显示这里；
+
+views下面的index.ejs添加文件
+
+<!--下面是分页条-->
+	<nav class="container">
+    <ul class="pagination">
+        <%
+         if(pageNum>1){
+             %>
+            <li class="<%=pageNum==1?'disabled':''%>">
+                <a href="/articles/list/<%=pageNum-1%>/2?keyword=<%=keyword %>" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <%
+         }
+        %>
+
+        <%
+         for (var i=1;i<=totalPage;i++){
+             %><li class="<%=pageNum==i?'active':''%>"><a href="/articles/list/<%=i%>/2?keyword=<%=keyword %>"><%=i%></a></li>
+        <%
+         }
+          %>
+
+        <%
+         if(pageNum<totalPage){
+             %>
+            <li class="<%=pageNum==totalPage?'disabled':''%>">
+                <a href="/articles/list/<%=pageNum+1%>/2?keyword=<%=keyword %>" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <%
+         }
+      %>
+    </ul>
+	</nav>
+
+最终效果如图
+
+![](http://i.imgur.com/3gbMRVe.png)
+
+评论的如下
+
+![](http://i.imgur.com/O7PcPFN.png)

@@ -18,9 +18,32 @@ var upload = multer({ storage: storage })
 router.get('/', function(req, res, next) {
     res.send('respond with a resource || 404,请求资源不存在！');
 });
-/**
- * 用户注册
- */
+
+router.get('/list/:pageNum/:pageSize', function(req, res) {
+    var pageNum =  parseInt(req.params.pageNum);
+    pageNum = pageNum<=0?1:pageNum;
+    var pageSize = parseInt(req.params.pageSize);
+    var keyword = req.query.keyword;
+    var query = new RegExp(keyword,"i");
+    Model('Article').count({$or:[{title:query},{content:query}]},function(err,count){
+        var totalPage = Math.ceil(count/pageSize);
+        pageNum = pageNum>=totalPage?totalPage:pageNum;
+        Model('Article').find({$or:[{title:query},{content:query}]})
+            .skip((pageNum-1)*pageSize).limit(pageSize).exec(function(err,articles){
+                res.render('index',{
+                    title:'主页',
+                    pageNum:pageNum,
+                    pageSize:pageSize,
+                    keyword: keyword,
+                    totalPage:totalPage,
+                    articles:articles
+                });
+            });
+    });
+
+});
+
+/*** 用户注册*/
 router.get('/add',middleware.checkLogin,  function (req, res) {
     res.render('articles/add', {title: '朱安邦博客添加文件',article:{}});
 });

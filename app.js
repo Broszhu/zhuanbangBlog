@@ -44,7 +44,8 @@ app.use(session({
 );
 app.use(flash());//引入后可以在req后面加一个flash的方法；通过req.flash来使用；
 app.use(function(req,res,next){
-  res.locals.user=req.session.user;
+    res.locals.keyword="";
+    res.locals.user=req.session.user;
     res.locals.success=req.flash("success").toString();//req.flash("success")取出来的是数组，需要toString一下；
     res.locals.error=req.flash("error").toString();
   next();

@@ -26,7 +26,6 @@
             if(user){
                 %>
                     <li><a href="/articles/add">发表文章</a></li>
-                    <li><a href="/users/logout">登出</a></li>
                 <%
             }else{
                 %>
@@ -36,11 +35,28 @@
             }
              %>
         </ul>
-    </div>
-</nav>
-<!--下面是flash的代码；代表登录成功和失败，success和error要喝user中设置的一样-->
+        <!--下面是搜索信息-->
+        <form class="navbar-form navbar-left" role="search" method="get" action="/articles/list/1/2">
+            <div class="form-group">
+                <input type="text" name="keyword" value="<%=keyword%>" class="form-control" placeholder="搜索关键字">
+            </div>
+            <button type="submit" class="btn btn-default">搜索</button>
+        </form>
+
+        <!--下面是用户信息-->
+        <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><%=user?user.username:""%> <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="/users/logout">登出</a></li>
+                </ul>
+            </li>
+        </ul>
+     </div>
+     </nav>
+     <!--下面是flash的代码；代表登录成功和失败，success和error要喝user中设置的一样-->
 <%
- if(success){
+if(success){
     %>
     <div class="alert alert-success" role="alert"><%=success %></div>
     <%

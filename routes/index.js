@@ -3,11 +3,13 @@ var router = express.Router();//生产一个路由实例
 
 /* GET home page. 获取主页*/
 router.get('/', function(req, res) {//当用户访问根目录；也就是 / 的时候执行此回调
-  var article = req.body;
+/*  var article = req.body;
   //populate('user')是mongo提供的方法；会找到user，然后循环name，id等；把用户的ID转成对象；这个用法非常好用，一定要记得用；
   Model('Article').find({}).populate('user').exec(function(err,articles){
     res.render('index', { articles: articles});
-  });
+  });*/
+
+  res.redirect('/articles/list/1/2');
 });
 module.exports = router;//导出这个路由并在app.js中通过app.use('/', routes); 加载
 
